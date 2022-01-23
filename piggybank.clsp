@@ -3,7 +3,6 @@
         ; these values still need to be asserted further since farmers can change these inputs in any way they like:
         ; 1) they could change the curr_balance to 0, and new_balalance to 1 to extract anything that is not spend in the bundle will be extracted by the farmer
         ; 2) they could change the self_puzzlehash to anything and make the coin create another coin altogether
-
         curr_balance ; current piggybank balance
         new_balance ; new balance for the piggybank
         self_puzzlehash ; this coin's hash for re-creation of the coin
