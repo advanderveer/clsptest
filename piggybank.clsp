@@ -1,33 +1,49 @@
 (mod 
     (
+        ; these values still need to be asserted further since farmers can change these inputs in any way they like:
+        ; 1) they could change the curr_balance to 0, and new_balalance to 1 to extract anything that is not spend in the bundle will be extracted by the farmer
+        ; 2) they could change the self_puzzlehash to anything and make the coin create another coin altogether
+
         curr_balance ; current piggybank balance
         new_balance ; new balance for the piggybank
         self_puzzlehash ; this coin's hash for re-creation of the coin
     ) 
     
-    (defconstant COND_CREATE_COINT 51)    
-    (defconstant SAVINGS_GOAL 500)
-    (defconstant PAYOUT_PUZZLEHASH 0xcafef00d)
+    ; opcodes for condition constants as defined in: https://chialisp.com/docs/coins_spends_and_wallets
+    (defconstant OP_CREATE_COINT 51) 
+    (defconstant OP_ASSERT_MY_PUZZLEHASH 72)
+    (defconstant OP_ASSERT_MY_AMOUNT 73)
+    (defconstant OP_CREATE_PUZZLE_ANNOUNCEMENT 62)
     
-    ; helper function that performs the logic that pays to the target wallet when the savings goal is reached
-    (defun-inline cash_out (self_puzzlehash)
+    ; constatns specific to this smart contract
+    (defconstant SAVINGS_GOAL 500)
+    (defconstant PAYOUT_PUZZLEHASH 0x975632d7e10f704ad062ae4b76306cc32dda32b6ebd92aa3f4998745f1c8ab37) ; decoded wallet address 
+    
+    ; spend 1: the spend that represents payout to the destination wallet
+    (defun-inline cash_out (curr_balance self_puzzlehash)
         (list 
-            (list COND_CREATE_COINT PAYOUT_PUZZLEHASH new_balance) ; create a new coin that (?)
-            (list COND_CREATE_COINT self_puzzlehash 0) ; re-create itself with a balance of 0
+            (list OP_CREATE_COINT PAYOUT_PUZZLEHASH new_balance) ; create a new coin that (?)
+            (list OP_CREATE_COINT self_puzzlehash 0) ; re-create itself with a balance of 0
+            (list OP_ASSERT_MY_PUZZLEHASH self_puzzlehash) ; make sure self_puzzlehash is equal to the hash of the puzzle that is executing
+            (list OP_ASSERT_MY_AMOUNT curr_balance) ; make sure curr_balance is equal to the coin's amount 
+            (list OP_CREATE_PUZZLE_ANNOUNCEMENT new_balance) ; allow other spends to assert themselves against the new amount to prevent manipulation
         )
     )
 
-    ; helper function that returns a condition such that the coin re-recreates itself
+    ; spend 2: recreation of the coin with the amount set to the new balance
     (defun-inline recreate_self (curr_balance new_balance self_puzzlehash) 
         (list 
-            (list COND_CREATE_COINT self_puzzlehash new_balance)
+            (list OP_CREATE_COINT self_puzzlehash new_balance)
+            (list OP_ASSERT_MY_PUZZLEHASH self_puzzlehash)
+            (list OP_ASSERT_MY_AMOUNT curr_balance)
+            (list OP_CREATE_PUZZLE_ANNOUNCEMENT new_balance)
         )
     )
     
-    ; main logic
+    ; main logic and checks
     (if (> new_balance curr_balance)         
             (if (> new_balance SAVINGS_GOAL)        
-                (cash_out self_puzzlehash) ;payout
+                (cash_out curr_balance self_puzzlehash) ;payout
                 (recreate_self curr_balance new_balance self_puzzlehash) ; re-create with new balance
             )        
         (x "new balance not larger than current balance") ; new_balance is not larger than current balance
