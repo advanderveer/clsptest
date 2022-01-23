@@ -22,6 +22,10 @@ Chia LISP test repo
 ## running the script
 - simple one line to run transfer.clsp: `run transfer.clsp > /tmp/main.clvm && brun /tmp/main.clvm '(10 10)'`
 
+## running the driver on Clovry
+- make sure the coin is compiled: `cdv clsp build piggybank.clsp`
+- make sure the dir where clvm driver package is in is set as PYTHONPATH: `PYTHONPATH=/home/clovyr/git python3 ./piggybank.py`
+
 ## resources
 - The Clovyr 101 guide: https://github.com/clovyr/chia-example/tree/main/intro
 - Greate guide on twitter to explain Coin model: https://twitter.com/yakuh1t0/status/1484567282848313351?ref_src=twsrc%5Etfw%7Ctwcamp%5Etweetembed%7Ctwterm%5E1484567282848313351%7Ctwgr%5E%7Ctwcon%5Es1_&ref_url=https%3A%2F%2Fwww.redditmedia.com%2Fmediaembed%2Fsadfu5%3Fresponsive%3Dtrueis_nightmode%3Dfalse
